@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07040f">
+<meta name="robots" content="noindex, nofollow">
+<title>I made something for you…</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="locked" data-mood="night">
+
+<!-- backgrounds -->
+<div id="moodbg" aria-hidden="true">
+  <i class="m-night"></i><i class="m-dusk"></i><i class="m-void"></i><i class="m-rose"></i>
+  <i class="m-calm"></i><i class="m-warm"></i>
+</div>
+<canvas id="bg" aria-hidden="true"></canvas>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<!-- UI chrome -->
+<div id="progress" aria-hidden="true"><i></i></div>
+<button id="music" class="music" type="button" aria-label="Play or pause the music" aria-pressed="false" hidden>
+  <span class="eq"><i></i><i></i><i></i><i></i></span>
+</button>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<!-- loading screen -->
+<div id="loader" role="status">
+  <div class="loader-heart">
+    <svg viewBox="0 0 100 90" width="96" height="86" aria-hidden="true"><defs><radialGradient id="lg" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#ffd0e0"/><stop offset="1" stop-color="#ff4f86"/></radialGradient></defs><path d="M50 84 C12 56 2 36 14 20 C24 7 42 10 50 24 C58 10 76 7 86 20 C98 36 88 56 50 84Z" fill="url(#lg)"/></svg>
+  </div>
+  <p id="loadLine1" class="load-line"></p>
+  <p id="loadLine2" class="load-line"></p>
+</div>
+
+<main id="app">
+
+  <!-- ================= CHAPTER ONE ================= -->
+  <div id="chapter1">
+
+    <!-- 5. intro -->
+    <section id="intro" class="intro" data-mood="night" data-vol=".22">
+      <div class="intro-scene" id="introScene" aria-hidden="true"></div>
+      <div class="intro-text"><p id="introLine" class="intro-line"></p></div>
+      <button id="keepGoing" class="btn primary" type="button" hidden></button>
+    </section>
+
+    <!-- 6. memories intro -->
+    <section id="memIntro" data-mood="dusk" data-vol=".5"></section>
+
+    <!-- 6/7. memories (polaroids) -->
+    <section id="memories" class="memories" data-mood="dusk" data-vol=".7">
+      <div id="memList"></div>
+      <p id="memEnd" class="mem-end rv"></p>
+      <p id="memDays" class="mem-days rv"></p>
+    </section>
+
+    <!-- 8. the real apology -->
+    <section id="apology" class="apology" data-mood="void" data-vol=".22"></section>
+
+    <!-- 9/10/11. the letter -->
+    <section id="letter" class="letter-sec" data-mood="dusk" data-vol=".45">
+      <div class="wrap">
+        <div class="writer" id="writer" aria-hidden="true"></div>
+        <p class="lead rv" id="letterLead"></p>
+        <div class="env-wrap" id="envWrap">
+          <div class="env-inner">
+            <button class="envelope" id="envelope" type="button" aria-label="Open the letter">
+              <span class="env-body"></span>
+              <span class="env-card"><i></i><i></i><i></i></span>
+              <span class="env-front l"></span><span class="env-front r"></span><span class="env-front b"></span>
+              <span class="env-flap"></span>
+              <span class="seal">❤</span>
+            </button>
+            <p class="tap" id="envHint"></p>
+          </div>
+        </div>
+        <div class="paper-wrap" id="paperWrap">
+          <div class="paper-clip"><article class="paper" id="paper"></article></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12. why I still love you -->
+    <section id="love" class="love" data-mood="rose" data-vol=".7">
+      <div class="love-head">
+        <div class="chr" id="chrHeart" aria-hidden="true"></div>
+        <h2 class="love-pre rv" id="lovePre"></h2>
+        <h2 class="love-big rv" id="loveBig" style="--d:1.1s"></h2>
+      </div>
+      <div class="cards" id="loveCards"></div>
+      <p class="tiny" id="loveHint"></p>
+    </section>
+
+    <!-- 13. what I actually want -->
+    <section id="want" class="want" data-mood="night" data-vol=".4"></section>
+
+    <!-- 14/15. the big question -->
+    <section id="question" class="question" data-mood="calm" data-vol=".35">
+      <div class="q-stage">
+        <h2 id="qSo" class="q-so"></h2>
+        <h2 id="qMain" class="q-main"></h2>
+        <p id="qMsg" class="q-msg" aria-live="polite"></p>
+        <div class="q-btns" id="qBtns">
+          <button id="yesBtn" class="btn yes" type="button"></button>
+          <button id="noBtn" class="btn no" type="button"></button>
+        </div>
+        <button id="notNow" class="quiet" type="button"></button>
+      </div>
+    </section>
+  </div>
+
+  <!-- ================= CHAPTER TWO ================= -->
+  <div id="chapter2" hidden>
+    <section id="c2title" class="c2title" data-mood="warm" data-vol=".8">
+      <div class="c2-text">
+        <h1 class="rv" id="c2h"></h1>
+        <p class="c2-sub rv" id="c2sub" style="--d:.5s"></p>
+      </div>
+      <div class="c2-photos" id="c2photos" aria-hidden="true"></div>
+    </section>
+
+    <section id="c2story" data-mood="warm" data-vol=".8"></section>
+
+    <section id="promises" class="promises" data-mood="warm" data-vol=".8">
+      <h2 class="rv" id="prTitle"></h2>
+      <p class="pr-sub rv" id="prSub"></p>
+      <div class="pcards" id="pCards"></div>
+      <p class="tiny" id="prHint"></p>
+      <p class="pr-note rv" id="prNote"></p>
+    </section>
+
+    <section id="future" class="future" data-mood="warm" data-vol=".8">
+      <h2 class="rv" id="fuTitle"></h2>
+      <div class="frames" id="fuFrames"></div>
+      <div class="words" id="fuWords"></div>
+    </section>
+
+    <section id="final" class="final" data-mood="night" data-vol=".9">
+      <div class="final-text">
+        <p id="finalLine" class="final-line"></p>
+        <button id="replay" class="btn primary" type="button" hidden></button>
+      </div>
+      <div class="final-scene" id="finalScene"></div>
+    </section>
+  </div>
+</main>
+
+<!-- photo lightbox -->
+<div id="lightbox" class="lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo">
+  <div class="lb-back" id="lbBack"></div>
+  <figure class="lb-card" id="lbCard">
+    <div class="lb-ph"><img id="lbImg" alt=""></div>
+    <figcaption id="lbMsg" class="lb-msg"></figcaption>
+  </figure>
+  <button class="lb-close" id="lbClose" type="button" aria-label="Close">×</button>
+</div>
+
+<!-- YES celebration -->
+<div id="celebrate" class="celebrate" hidden>
+  <div class="flash" id="flash"></div>
+  <div class="cel-photos" id="celPhotos" aria-hidden="true"></div>
+  <div class="cel-hug" id="celHug" aria-hidden="true"></div>
+  <p id="celLine" class="cel-line"></p>
+</div>
+
+<!-- NO ending -->
+<div id="noEnd" class="no-end" hidden>
+  <p id="noLine" class="no-line"></p>
+  <div class="no-actions" id="noActions" hidden>
+    <button id="noBack" class="quiet" type="button"></button>
+    <button id="noRestart" class="quiet" type="button"></button>
+  </div>
+</div>
+
+<noscript><p style="position:fixed;inset:0;display:grid;place-items:center;background:#07040f;color:#fff;font-family:sans-serif;padding:24px;text-align:center;z-index:999">This page needs JavaScript to tell its story 🤍</p></noscript>
+
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
