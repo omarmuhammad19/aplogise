@@ -1,5 +1,5 @@
 /* ==========================================================================
-   The engine. You shouldn't need to edit this file — all the words, photos,
+   The engine. You shouldn't need to edit this file — all the words,
    names and colours live in js/config.js
    ========================================================================== */
 (() => {
@@ -49,33 +49,6 @@ const Lock = {
   sync() { const on = locks.size > 0; body.classList.toggle('locked', on); document.documentElement.classList.toggle('locked', on); }
 };
 Lock.add('boot');
-
-/* ==========================================================================
-   PHOTOS (with graceful placeholders)
-   ========================================================================== */
-const EXTS = ['jpg', 'jpeg', 'png', 'webp', 'JPG', 'JPEG', 'PNG', 'WEBP'];
-function placeholderPhoto(i) {
-  const h = [338, 318, 292, 266, 350, 18, 304, 328][i % 8];
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${h},72%,64%)"/><stop offset="1" stop-color="hsl(${h + 40},60%,30%)"/></linearGradient></defs><rect width="400" height="500" fill="url(#g)"/><circle cx="330" cy="90" r="60" fill="rgba(255,255,255,.12)"/><path d="M200 330 C130 275 112 215 154 188 C182 171 200 193 200 210 C200 193 218 171 246 188 C288 215 270 275 200 330Z" fill="rgba(255,255,255,.4)"/><text x="200" y="400" text-anchor="middle" font-family="Georgia,serif" font-size="30" fill="rgba(255,255,255,.85)">photo ${i + 1}</text><text x="200" y="436" text-anchor="middle" font-family="Georgia,serif" font-size="18" fill="rgba(255,255,255,.55)">replace me in /assets</text></svg>`;
-  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
-}
-/* photoIndex is 0-based. Tries the configured path, then other extensions, then the placeholder. */
-function loadPhoto(img, photoIndex) {
-  const list = C.photos || [];
-  const i = list.length ? ((photoIndex % list.length) + list.length) % list.length : photoIndex;
-  const main = list[i] || '';
-  const base = main.replace(/\.[a-z0-9]+$/i, '');
-  const tries = main ? [main, ...EXTS.map(e => `${base}.${e}`).filter(p => p !== main)] : [];
-  let n = 0;
-  img.onerror = () => {
-    n++;
-    if (n < tries.length) img.src = tries[n];
-    else { img.onerror = null; img.src = placeholderPhoto(i); }
-  };
-  if (tries.length) img.src = tries[0]; else img.src = placeholderPhoto(i);
-}
-const photoImg = (i, alt = '') => `<img data-photo="${i}" alt="${esc(alt)}" loading="lazy" decoding="async">`;
-function hydratePhotos(root = document) { $$('img[data-photo]', root).forEach(im => { loadPhoto(im, +im.dataset.photo); im.removeAttribute('data-photo'); }); }
 
 /* ==========================================================================
    SOUND (music + tiny sfx)
@@ -295,7 +268,7 @@ const polaroidSvg = (x, y, w, rot, cls = '', hue = 330) => `<g class="${cls}"><g
 
 function sceneIntro() {
   const him = C.characters.him;
-  return `<svg viewBox="0 0 320 250" role="img" aria-label="">
+  return `<svg viewBox="0 0 320 250" aria-hidden="true">
     <defs><radialGradient id="lampg" cx="50%" cy="55%" r="55%"><stop offset="0" stop-color="#ffb36b" stop-opacity=".5"/><stop offset="1" stop-color="#ffb36b" stop-opacity="0"/></radialGradient></defs>
     <circle class="lamp" cx="160" cy="150" r="125" fill="url(#lampg)"/>
     <ellipse cx="160" cy="226" rx="140" ry="13" fill="rgba(0,0,0,.35)"/>
@@ -409,14 +382,22 @@ $('#memList').innerHTML = C.memories.map((m, i) => {
     <div class="doodle px" data-speed="${(-sp * 3).toFixed(2)}" style="top:${8 + (i * 13) % 20}%;${i % 2 ? 'left' : 'right'}:${6 + (i * 7) % 14}%;--s:${40 + (i % 3) * 14}px">${d1}</div>
     <div class="doodle px" data-speed="${(sp * 4).toFixed(2)}" style="bottom:${6 + (i * 9) % 18}%;${i % 2 ? 'right' : 'left'}:${5 + (i * 11) % 16}%;--s:${34 + (i % 2) * 14}px">${d2}</div>
     <div class="pol-wrap px" data-speed="${sp.toFixed(2)}">
-      <button class="pol" type="button" data-mem="${i}" style="--rot:${rot}deg" aria-label="Open photo: ${esc(m.caption)}">
-        <span class="ph-box">${photoImg(m.photo - 1, '')}</span>
+      <button class="pol" type="button" data-mem="${i}" style="--rot:${rot}deg" aria-label="${esc(m.caption)}">
+        <span class="ph-box"><span>${i + 1}</span></span>
         <span class="cap">${fmt(m.caption)}</span>
         ${i === 0 ? '<span class="tap-tag">tap me 🤍</span>' : ''}
       </button>
     </div></div>`;
 }).join('');
 $('#memEnd').innerHTML = fmt(C.memoriesEnd);
+$('#memList').addEventListener('click', e => {
+  const b = e.target.closest('.pol');
+  if (!b) return;
+  const m = C.memories[+b.dataset.mem];
+  if (!m) return;
+  Sound.tap();
+  toast(m.message);
+});
 if (C.dates && C.dates.together) {
   const d = new Date(C.dates.together + 'T00:00:00');
   if (!isNaN(d)) {
@@ -441,7 +422,6 @@ $('#envHint').textContent = C.letter.hint;
   add(P.message1);
   L.apology.forEach(t => add(t));
   add(P.message2);
-  paras.push(`<div class="paper-photo"><div class="ph-box">${photoImg(6, '')}</div></div>`);
   add(P.message3);
   add(P.message4);
   add(L.closing, 'closing');
@@ -468,8 +448,6 @@ $('#notNow').textContent = C.question.notNow;
 /* chapter two */
 $('#c2h').textContent = C.chapter2.title;
 $('#c2sub').textContent = C.chapter2.sub;
-$('#c2photos').innerHTML = [[7, '2%', '8%', '-8deg', '.1s'], [0, '33%', '0%', '3deg', '.5s'], [3, '62%', '10%', '9deg', '.9s']].map(([p, x, y, r, dl]) =>
-  `<div class="c2-pol" style="--x:${x};--y:${y};--r:${r};--dl:${dl}"><span><div>${photoImg(p, '')}</div></span></div>`).join('');
 buildSteps($('#c2story'), C.chapter2.story, { hint: false });
 $('#prTitle').textContent = C.chapter2.promisesTitle;
 $('#prSub').textContent = C.chapter2.promisesSub;
@@ -486,8 +464,6 @@ $('#replay').textContent = C.final.replay;
 $('#noBack').textContent = C.noEnding.back;
 $('#noRestart').textContent = C.noEnding.restart;
 
-hydratePhotos();
-
 /* ==========================================================================
    LOADING SCREEN  ->  INTRO
    ========================================================================== */
@@ -496,8 +472,6 @@ hydratePhotos();
   const quick = location.hash === '#skip';  // handy while editing: yoursite.com/#skip jumps past the intro
   const skip = quick || sessionStorage.getItem('skipLoader') === '1';
   sessionStorage.removeItem('skipLoader');
-  /* warm the photo cache while the loader plays */
-  (C.photos || []).forEach((p, i) => { const im = new Image(); loadPhoto(im, i); });
   const loader = $('#loader');
   if (skip) { loader.classList.add('out'); loader.style.display = 'none'; }
   else {
@@ -537,7 +511,7 @@ async function runIntro() {
    ========================================================================== */
 const progress = $('#progress i');
 const px = $$('.px');
-const pendingParas = $$('#paper > p, #paper > .paper-photo');
+const pendingParas = $$('#paper > p');
 let letterOpen = false;
 let ticking = false;
 function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
@@ -578,7 +552,7 @@ update();
 
 /* ---------- reveal on view + mood/music per scene ---------- */
 const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .2 });
-$$('.rv, .pol, .c2-pol').forEach(el => io.observe(el));
+$$('.rv, .pol').forEach(el => io.observe(el));
 
 const moodIO = new IntersectionObserver(es => es.forEach(e => {
   if (!e.isIntersecting) return;
@@ -586,43 +560,6 @@ const moodIO = new IntersectionObserver(es => es.forEach(e => {
   if (e.target.dataset.vol) Music.setScene(parseFloat(e.target.dataset.vol));
 }), { rootMargin: '-48% 0px -48% 0px' });
 $$('[data-mood]').forEach(el => { if (el !== body) moodIO.observe(el); });
-
-/* ==========================================================================
-   LIGHTBOX
-   ========================================================================== */
-const lb = $('#lightbox'), lbCard = $('#lbCard'), lbImg = $('#lbImg'), lbMsg = $('#lbMsg');
-let lbSrc = null, lbOpen = false;
-function openLB(i, srcEl) {
-  const m = C.memories[i]; lbSrc = srcEl; lbOpen = true;
-  loadPhoto(lbImg, m.photo - 1); lbMsg.innerHTML = fmt(m.message);
-  lb.hidden = false; lb.classList.remove('on'); Lock.add('lb');
-  lbCard.style.transition = 'none'; lbCard.style.transform = 'none'; lbCard.style.opacity = '1';
-  const to = lbCard.getBoundingClientRect(), from = srcEl.getBoundingClientRect();
-  const s = from.width / to.width;
-  lbCard.style.transform = `translate(${from.left + from.width / 2 - (to.left + to.width / 2)}px,${from.top + from.height / 2 - (to.top + to.height / 2)}px) scale(${s})`;
-  lbCard.style.opacity = '.3'; void lbCard.offsetWidth;
-  lbCard.style.transition = ''; lbCard.style.transform = ''; lbCard.style.opacity = '';
-  lb.classList.add('on'); Sound.tap();
-  setTimeout(() => { const r = lbCard.getBoundingClientRect(); FX.hearts(r.left + r.width / 2, r.top + r.height * .55, 14); FX.sparkles(r.left + r.width / 2, r.top + r.height / 2, 16); }, 420);
-}
-function closeLB() {
-  if (!lbOpen) return; lbOpen = false;
-  lb.classList.remove('on');
-  const to = lbCard.getBoundingClientRect();
-  if (lbSrc) {
-    const from = lbSrc.getBoundingClientRect();
-    if (from.bottom > 0 && from.top < innerHeight) {
-      lbCard.style.transform = `translate(${from.left + from.width / 2 - (to.left + to.width / 2)}px,${from.top + from.height / 2 - (to.top + to.height / 2)}px) scale(${from.width / to.width})`;
-    } else lbCard.style.transform = 'scale(.85)';
-  }
-  lbCard.style.opacity = '0';
-  setTimeout(() => { lb.hidden = true; Lock.del('lb'); lbCard.style.transform = ''; lbCard.style.opacity = ''; }, 650);
-}
-$('#memList').addEventListener('click', e => { const b = e.target.closest('.pol'); if (b) openLB(+b.dataset.mem, b); });
-$('#lbBack').addEventListener('click', closeLB);
-$('#lbClose').addEventListener('click', closeLB);
-lbCard.addEventListener('click', closeLB);
-addEventListener('keydown', e => { if (e.key === 'Escape') closeLB(); });
 
 /* ==========================================================================
    LETTER
@@ -691,10 +628,7 @@ async function celebrate() {
   const ov = $('#celebrate'); if (!ov.hidden) return;
   Sound.init(); Sound.enabled = Music.on; Sound.chime(); Music.setScene(.95);
   Lock.add('cel');
-  const photos = $('#celPhotos'), hug = $('#celHug'), line = $('#celLine');
-  const spots = [[4, 8], [70, 5], [80, 36], [2, 42], [74, 66], [8, 70], [38, 3], [42, 84]];
-  photos.innerHTML = spots.map(([x, y], i) => `<div class="cel-pol" style="--x:${x};--y:${y};--r:${rand(-14, 14).toFixed(0)}deg;--dl:${(i * .25).toFixed(2)}s"><span><div>${photoImg(i, '')}</div></span></div>`).join('');
-  hydratePhotos(photos);
+  const hug = $('#celHug'), line = $('#celLine');
   hug.innerHTML = sceneHug();
   ov.hidden = false; void ov.offsetWidth; ov.classList.add('on');
   $('#flash').classList.add('go');
@@ -716,7 +650,6 @@ function enterChapterTwo() {
   body.dataset.mood = 'warm'; body.classList.add('ch2');
   Music.setScene(.8);
   window.scrollTo(0, 0);
-  $$('.c2-pol').forEach(el => setTimeout(() => el.classList.add('in'), 400));
   update(); setTimeout(update, 200);
 }
 
